@@ -74,36 +74,32 @@ class Scanner:
         char = self.current_char()
 
         if not char or not char.isdigit():
-            return None  # Not a valid identifier start
+            return None  # Not a valid number start
 
         number = ""
         has_decimal = False
 
-        # Read the complete identifier
+        # Cycle through number
         while self.current_char():
             char = self.current_char()
 
             if char.isdigit():
                 number += char
                 self.advance()
+
             # Check if there is only one dot
             elif char == '.' and not has_decimal:
-
                 next_pos = self.pos + 1
                 # Index out of range handling
-
                 if next_pos < len(self.file_contents):
-
                     # Check if after dot is another digit
                     if self.file_contents[next_pos].isdigit():
                         has_decimal = True
                         number += char
                         self.advance()
                     else:
-
                         break
                 else:
-
                     break
             else:
                 break
@@ -117,7 +113,7 @@ class Scanner:
         char = self.current_char()
 
         if not char or not char == '"':
-            return None  # Not a valid identifier start
+            return None  # Not a valid string start
 
         string = ""
         self.advance()
