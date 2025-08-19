@@ -15,33 +15,36 @@ class Scanner:
 
     def get_token_type(self):
         while self.current_char():
-            new_token = ()
             self.skip_whitespace()  # skip unnecessary spaces
+            new_token = ()
+
 
             char = self.current_char()
 
-            if self.read_identifier() is not None: # Check if token is identifier
-                identifier = self.read_identifier()
-                new_token = Token(EToken.IDENTIFIER, identifier, "null")
-            elif self.read_number() is not None: # Check if token is number
-                number = self.read_number()
-                new_token = Token(EToken.NUMBER, number, number)
-            elif self.read_string() is not None: # Check if token is string
-                string = self.read_string()
-                new_token = Token(EToken.STRING, string, string)
+
+            # Walrus operator since Py 3.8, set variable right in condition
+            if identifier := self.read_identifier(): # Check if token is identifier
+                new_token = Token("IDENTIFIER", identifier, "null")
+            elif number := self.read_number(): # Check if token is number
+                new_token = Token("NUMBER", number, number)
+            elif string := self.read_string(): # Check if token is string
+                new_token = Token("STRING", string, string)
             else: # Check other tokens
                 for token in EToken:
 
                     if token.value == char:
                         new_token = Token(token.name, token.value, "null")
                         self.advance()
-            new_token.print()
+                        break
+            new_token.print_()
 
         new_token = Token(EToken.EOF.name, "", "null")
-        new_token.print()
+        new_token.print_()
 
     def read_identifier(self):
-        """Reads a complete identifier from current position"""
+        """Reads a complete identifier from current position
+            :return identifier - in String format
+        """
         char = self.current_char()
 
         # Check if first character is not number and if it is valid
@@ -56,9 +59,18 @@ class Scanner:
             identifier += self.current_char()
             self.advance()
 
+        # Check reserved Keyword
+        for token in EToken:
+            if token.value == identifier:
+                return None
+
+        print("Vrací identifier: " + identifier)
         return identifier
+
     def read_number(self):
-        """Reads a complete number from current position"""
+        """Reads a complete number from current position
+            :return number - in String format
+        """
         char = self.current_char()
 
         if not char or not char.isdigit():
@@ -76,17 +88,32 @@ class Scanner:
                 self.advance()
             # Check if there is only one dot
             elif char == '.' and not has_decimal:
-                has_decimal = True
-                number += char
-                self.advance()
 
+                next_pos = self.pos + 1
+                # Index out of range handling
+
+                if next_pos < len(self.file_contents):
+
+                    # Check if after dot is another digit
+                    if self.file_contents[next_pos].isdigit():
+                        has_decimal = True
+                        number += char
+                        self.advance()
+                    else:
+
+                        break
+                else:
+
+                    break
             else:
                 break
 
         return number # Return number in String
 
     def read_string(self):
-        """Reads a complete string from current position"""
+        """Reads a complete string from current position
+            :return string(name of variable) - in String format
+        """
         char = self.current_char()
 
         if not char or not char == '"':
@@ -103,7 +130,9 @@ class Scanner:
         return string # Return string message in type String
 
     def current_char(self):
-        """Retrun current char"""
+        """Return current char position"""
+
+
         if self.pos >= len(self.file_contents):
             return None
         return self.file_contents[self.pos]

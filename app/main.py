@@ -7,9 +7,6 @@ def main():
 
     filename = codecrafters()
 
-    # with open("main.lox", "r") as file:
-    #     filename = file.read()  # Celý obsah jako string
-
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
     tokenize = sc(filename)

@@ -27,9 +27,9 @@ class Token_type(Enum):
     LESS_EQUAL = "<="
 
     #Literals
-    IDENTIFIER = "IDENTIFIER"
-    STRING = "STRING"
-    NUMBER = "NUMBER"
+    # IDENTIFIER = "IDENTIFIER"
+    # STRING = "STRING"
+    # NUMBER = "NUMBER"
 
     # Keywords
     AND = "and"

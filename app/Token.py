@@ -6,5 +6,5 @@ class Token:
         self.literal = literal
 
 
-    def print(self):
+    def print_(self):
         print(f"{self.token_type} {self.lexeme} {self.literal}")
