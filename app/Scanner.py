@@ -8,7 +8,6 @@ class Scanner:
         with open(filename) as file:
             self.file_contents = file.read() # Read whole file
 
-
     def tokenize(self):
         """Tokenize the file contents."""
         self.get_token_type()
@@ -18,9 +17,7 @@ class Scanner:
             self.skip_whitespace()  # skip unnecessary spaces
             new_token = ()
 
-
             char = self.current_char()
-
 
             # Walrus operator since Py 3.8, set variable right in condition
             if identifier := self.read_identifier(): # Check if token is identifier
