@@ -19,8 +19,8 @@ class Token_type(Enum):
     # One or two character tokens
     BANG = "!"
     BANG_EQUAL = "!="
-    EQUAL = "="
     EQUAL_EQUAL = "=="
+    EQUAL = "="
     GREATER = ">"
     GREATER_EQUAL = ">="
     LESS = "<"
