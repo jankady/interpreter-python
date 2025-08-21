@@ -1,3 +1,5 @@
+import sys
+
 from .EToken import Token_type as EToken
 from .Token import Token
 
@@ -5,6 +7,7 @@ class Scanner:
     def __init__(self, filename):
         """Initialize the scanner."""
         self.pos = 0 # my position for each character
+        self.unknown_char = False # if syntax contained invalid symbol
         with open(filename) as file:
             self.file_contents = file.read() # Read whole file
 
@@ -16,27 +19,41 @@ class Scanner:
         while self.current_char():
             self.skip_whitespace()  # skip unnecessary spaces
             new_token = ()
-
+            this_unknown_char = False # variable if character is valid
             char = self.current_char()
 
             # Walrus operator since Py 3.8, set variable right in condition
             if identifier := self.read_identifier(): # Check if token is identifier
                 new_token = Token("IDENTIFIER", identifier, "null")
+                this_unknown_char = True
             elif number := self.read_number(): # Check if token is number
                 new_token = Token("NUMBER", number, number)
+                this_unknown_char = True
+
             elif string := self.read_string(): # Check if token is string
                 new_token = Token("STRING", string, string)
+                this_unknown_char = True
             else: # Check other tokens
                 for token in EToken:
 
                     if token.value == char:
                         new_token = Token(token.name, token.value, "null")
                         self.advance()
+                        this_unknown_char = True
                         break
-            new_token.print_()
+
+            if not this_unknown_char:
+                print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
+                self.unknown_char = True
+                self.advance()
+
+            else:
+                new_token.print_()
 
         new_token = Token(EToken.EOF.name, "", "null")
         new_token.print_()
+        if self.unknown_char:
+            exit(65)
 
     def read_identifier(self):
         """Reads a complete identifier from current position
