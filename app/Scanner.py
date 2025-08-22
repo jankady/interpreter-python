@@ -12,10 +12,21 @@ class Scanner:
             self.file_contents = file.read() # Read whole file
 
     def tokenize(self):
-        """Tokenize the file contents."""
+        """Tokenize the file contents.
+            Is used just for calling get_token_type()
+
+        """
         self.get_token_type()
 
     def get_token_type(self):
+        """
+        Main method to get the token type from the file contents.
+        Create Token object and print it to stdout in format: <token type> <lexeme> <literal>
+        File always end with EOF  null
+
+        :exits:
+            code 65: If there is an unexpected character in the source code.
+        """
         while self.current_char():
             self.skip_whitespace()  # skip unnecessary spaces
             new_token = ()
@@ -47,7 +58,22 @@ class Scanner:
                         or char == EToken.LESS.value)
                         and next_pos < len(self.file_contents) # Index out of range handling
                         and self.file_contents[next_pos] == "="): # check if next char is =
-                            new_token = Token(EToken.EQUAL_EQUAL.name, EToken.EQUAL_EQUAL.value, "null")
+                            key = ""
+                            value = ""
+                            if char == EToken.EQUAL.value: # char is ==
+                                key = EToken.EQUAL_EQUAL.name
+                                value = EToken.EQUAL_EQUAL.value
+                            elif char == EToken.BANG.value: # char is !=
+                                key = EToken.BANG_EQUAL.name
+                                value = EToken.BANG_EQUAL.value
+                            elif char == EToken.GREATER.value: # char is >=
+                                key = EToken.GREATER_EQUAL.name
+                                value = EToken.GREATER_EQUAL.value
+                            else: # char is <=
+                                key = EToken.LESS_EQUAL.name
+                                value = EToken.LESS_EQUAL.value
+
+                            new_token = Token(key, value, "null")
                             self.advance()
                             self.advance()
                         else:
@@ -155,8 +181,6 @@ class Scanner:
 
     def current_char(self):
         """Return current char position"""
-
-
         if self.pos >= len(self.file_contents):
             return None
         return self.file_contents[self.pos]
