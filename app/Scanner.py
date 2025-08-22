@@ -3,6 +3,7 @@ import sys
 from .EToken import Token_type as EToken
 from .Token import Token
 
+
 class Scanner:
     def __init__(self, filename):
         """Initialize the scanner."""
@@ -24,7 +25,7 @@ class Scanner:
         Create Token object and print it to stdout in format: <token type> <lexeme> <literal>
         File always end with EOF  null
 
-        :exits:
+        exits:
             code 65: If there is an unexpected character in the source code.
         """
         while self.current_char():
@@ -46,41 +47,7 @@ class Scanner:
                 this_unknown_char = True
 
             else: # Check other tokens
-                for token in EToken:
-                    if token.value == char:
-                        next_pos = self.pos + 1
-                        this_unknown_char = True
-
-                        # Check if character is == or != or <= or >=
-                        if((char == EToken.BANG.value
-                        or char == EToken.EQUAL.value
-                        or char == EToken.GREATER.value
-                        or char == EToken.LESS.value)
-                        and next_pos < len(self.file_contents) # Index out of range handling
-                        and self.file_contents[next_pos] == "="): # check if next char is =
-                            key = ""
-                            value = ""
-                            if char == EToken.EQUAL.value: # char is ==
-                                key = EToken.EQUAL_EQUAL.name
-                                value = EToken.EQUAL_EQUAL.value
-                            elif char == EToken.BANG.value: # char is !=
-                                key = EToken.BANG_EQUAL.name
-                                value = EToken.BANG_EQUAL.value
-                            elif char == EToken.GREATER.value: # char is >=
-                                key = EToken.GREATER_EQUAL.name
-                                value = EToken.GREATER_EQUAL.value
-                            else: # char is <=
-                                key = EToken.LESS_EQUAL.name
-                                value = EToken.LESS_EQUAL.value
-
-                            new_token = Token(key, value, "null")
-                            self.advance()
-                            self.advance()
-                        else:
-                            new_token = Token(token.name, token.value, "null")
-                            self.advance()
-
-                        break
+               new_token,this_unknown_char = self.check_other_tokens(char)
 
             if not this_unknown_char:
                 print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
@@ -178,6 +145,77 @@ class Scanner:
             self.advance()
 
         return string # Return string message in type String
+
+    def check_other_tokens(self, char: str):
+        """Check if other tokens exist in current position
+
+            Args:
+                char (str): current character in file contents
+
+            :return:
+                Token: Token for other tokens in current position
+                this_unknown_char: False If there is an unexpected char
+        """
+        for token in EToken:
+            if token.value == char:
+                next_pos = self.pos + 1
+                this_unknown_char = True
+
+                # Check if character is comment
+                if self.is_comment(char, next_pos):
+                    new_token = Token(EToken.EOF.name, "", "null")
+                    new_token.print_()
+                    if self.unknown_char:
+                        exit(65)
+                    exit(0)
+
+
+                # Check if character is == or != or <= or >=
+                elif ((char == EToken.BANG.value
+                     or char == EToken.EQUAL.value
+                     or char == EToken.GREATER.value
+                     or char == EToken.LESS.value)
+                        and next_pos < len(self.file_contents)  # Index out of range handling
+                        and self.file_contents[next_pos] == "="):  # check if next char is =
+                    key = ""
+                    value = ""
+                    if char == EToken.EQUAL.value:  # char is ==
+                        key = EToken.EQUAL_EQUAL.name
+                        value = EToken.EQUAL_EQUAL.value
+                    elif char == EToken.BANG.value:  # char is !=
+                        key = EToken.BANG_EQUAL.name
+                        value = EToken.BANG_EQUAL.value
+                    elif char == EToken.GREATER.value:  # char is >=
+                        key = EToken.GREATER_EQUAL.name
+                        value = EToken.GREATER_EQUAL.value
+                    else:  # char is <=
+                        key = EToken.LESS_EQUAL.name
+                        value = EToken.LESS_EQUAL.value
+
+                    self.advance()
+                    self.advance()
+                    return Token(key, value, "null"), this_unknown_char
+                else:
+                    self.advance()
+                    return Token(token.name, token.value, "null"), this_unknown_char
+
+        return None, False
+
+    def is_comment(self, char: str, next_pos: int):
+        """Check if char is comment
+        :arg:
+            char: current character in file contents
+            next_pos: next position in file contents
+
+        :return:
+                True: if char is comment
+                None: if char is not comment
+        """
+        if (char == EToken.SLASH.value
+        and next_pos < len(self.file_contents)
+        and self.file_contents[next_pos] == "/"):
+            return True
+        return None
 
     def current_char(self):
         """Return current char position"""
