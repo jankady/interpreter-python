@@ -33,13 +33,27 @@ class Scanner:
             elif string := self.read_string(): # Check if token is string
                 new_token = Token("STRING", string, string)
                 this_unknown_char = True
+
             else: # Check other tokens
                 for token in EToken:
-
                     if token.value == char:
-                        new_token = Token(token.name, token.value, "null")
-                        self.advance()
+                        next_pos = self.pos + 1
                         this_unknown_char = True
+
+                        # Check if character is == or != or <= or >=
+                        if((char == EToken.BANG.value
+                        or char == EToken.EQUAL.value
+                        or char == EToken.GREATER.value
+                        or char == EToken.LESS.value)
+                        and next_pos < len(self.file_contents) # Index out of range handling
+                        and self.file_contents[next_pos] == "="): # check if next char is =
+                            new_token = Token(EToken.EQUAL_EQUAL.name, EToken.EQUAL_EQUAL.value, "null")
+                            self.advance()
+                            self.advance()
+                        else:
+                            new_token = Token(token.name, token.value, "null")
+                            self.advance()
+
                         break
 
             if not this_unknown_char:
