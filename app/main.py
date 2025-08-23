@@ -1,6 +1,6 @@
 import sys
 
-from .Scanner import Scanner as sc
+from .Scanner import Scanner as scan
 
 
 def main():
@@ -9,7 +9,7 @@ def main():
 
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
-    tokenize = sc(filename)
+    tokenize = scan(filename)
     tokenize.tokenize()
 
 def codecrafters():

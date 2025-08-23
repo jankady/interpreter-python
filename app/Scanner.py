@@ -25,31 +25,29 @@ class Scanner:
         Create Token object and print it to stdout in format: <token type> <lexeme> <literal>
         File always end with EOF  null
 
-        exits:
-            code 65: If there is an unexpected character in the source code.
         """
+        self.skip_whitespace()
+
         while self.current_char():
             self.skip_whitespace()  # skip unnecessary spaces
-            new_token = ()
-            this_unknown_char = False # variable if character is valid
             char = self.current_char()
 
             # Walrus operator since Py 3.8, set variable right in condition
             if identifier := self.read_identifier(): # Check if token is identifier
                 new_token = Token("IDENTIFIER", identifier, "null")
-                this_unknown_char = True
+                this_unknown_char = False
             elif number := self.read_number(): # Check if token is number
                 new_token = Token("NUMBER", number, number)
-                this_unknown_char = True
+                this_unknown_char = False
 
             elif string := self.read_string(): # Check if token is string
                 new_token = Token("STRING", string, string)
-                this_unknown_char = True
+                this_unknown_char = False
 
             else: # Check other tokens
                new_token,this_unknown_char = self.check_other_tokens(char)
 
-            if not this_unknown_char:
+            if this_unknown_char: # Check if unknown char occurred during Tokenization
                 print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
                 self.unknown_char = True
                 self.advance()
@@ -57,14 +55,11 @@ class Scanner:
             else:
                 new_token.print_()
 
-        new_token = Token(EToken.EOF.name, "", "null")
-        new_token.print_()
-        if self.unknown_char:
-            exit(65)
+        self.exit_program()
 
     def read_identifier(self):
         """Reads a complete identifier from current position
-            :return identifier - in String format
+            :return identifier for token_type and lexeme
         """
         char = self.current_char()
 
@@ -85,7 +80,6 @@ class Scanner:
             if token.value == identifier:
                 return None
 
-        print("Vrací identifier: " + identifier)
         return identifier
 
     def read_number(self):
@@ -159,15 +153,11 @@ class Scanner:
         for token in EToken:
             if token.value == char:
                 next_pos = self.pos + 1
-                this_unknown_char = True
+                this_unknown_char = False
 
                 # Check if character is comment
                 if self.is_comment(char, next_pos):
-                    new_token = Token(EToken.EOF.name, "", "null")
-                    new_token.print_()
-                    if self.unknown_char:
-                        exit(65)
-                    exit(0)
+                    self.exit_program()
 
 
                 # Check if character is == or != or <= or >=
@@ -199,7 +189,7 @@ class Scanner:
                     self.advance()
                     return Token(token.name, token.value, "null"), this_unknown_char
 
-        return None, False
+        return None, True
 
     def is_comment(self, char: str, next_pos: int):
         """Check if char is comment
@@ -229,6 +219,20 @@ class Scanner:
 
     def skip_whitespace(self):
         """Skips whitespace characters"""
-        # it just checks if the position where self.pos is poiting is blank
+        # Checks if the position where self.pos is pointing is blank
         while self.current_char() and self.current_char().isspace():
             self.advance()
+
+    def exit_program(self):
+        """
+        Exit program
+
+        exits:
+            code 65: If there is an unexpected character in the source code.
+        """
+        new_token = Token(EToken.EOF.name, "", "null")
+        new_token.print_()
+        if self.unknown_char:
+            exit(65)
+        else:
+            exit(0)
