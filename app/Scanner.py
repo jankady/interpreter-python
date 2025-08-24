@@ -9,12 +9,13 @@ class Scanner:
         """Initialize the scanner."""
         self.pos = 0 # my position for each character
         self.unknown_char = False # if syntax contained invalid symbol
+        self.line_number = 1
         with open(filename) as file:
             self.file_contents = file.read() # Read whole file
 
     def tokenize(self):
         """Tokenize the file contents.
-            Is used just for calling get_token_type()
+            Is used just for call get_token_type()
 
         """
         self.get_token_type()
@@ -32,6 +33,10 @@ class Scanner:
             self.skip_whitespace()  # skip unnecessary spaces
             char = self.current_char()
 
+            # Check end of line
+            if self.line_number != self.get_line_number():
+                self.line_number = self.get_line_number()
+
             # Walrus operator since Py 3.8, set variable right in condition
             if identifier := self.read_identifier(): # Check if token is identifier
                 new_token = Token("IDENTIFIER", identifier, "null")
@@ -48,7 +53,7 @@ class Scanner:
                new_token,this_unknown_char = self.check_other_tokens(char)
 
             if this_unknown_char: # Check if unknown char occurred during Tokenization
-                print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
+                print(f"[line {self.line_number}] Error: Unexpected character: {char}", file=sys.stderr)
                 self.unknown_char = True
                 self.advance()
 
@@ -59,7 +64,9 @@ class Scanner:
 
     def read_identifier(self):
         """Reads a complete identifier from current position
-            :return identifier for token_type and lexeme
+
+            return:
+                identifier (Str): identifier for token_type and lexeme
         """
         char = self.current_char()
 
@@ -84,7 +91,7 @@ class Scanner:
 
     def read_number(self):
         """Reads a complete number from current position
-            :return number - in String format
+            :return number (Str): number, which is represented as a string
         """
         char = self.current_char()
 
@@ -123,7 +130,8 @@ class Scanner:
 
     def read_string(self):
         """Reads a complete string from current position
-            :return string(name of variable) - in String format
+
+            :return string (Str): word, which is represented as string
         """
         char = self.current_char()
 
@@ -144,11 +152,11 @@ class Scanner:
         """Check if other tokens exist in current position
 
             Args:
-                char (str): current character in file contents
+                char (Str): current character in file contents
 
             :return:
-                Token: Token for other tokens in current position
-                this_unknown_char: False If there is an unexpected char
+                Token (Token): Token for other tokens in current position
+                this_unknown_char (bool): False If there is an unexpected char
         """
         for token in EToken:
             if token.value == char:
@@ -157,7 +165,17 @@ class Scanner:
 
                 # Check if character is comment
                 if self.is_comment(char, next_pos):
-                    self.exit_program()
+                    self.increase_line_num()
+
+                    # Check if number of lines is larger than total number of lines of the file
+                    if self.line_number > self.get_total_lines():
+                        self.exit_program()
+                    else:
+                        # skip current line and start at new one
+                        while self.line_number != self.get_line_number():
+                            self.advance()
+
+                        self.get_token_type()
 
 
                 # Check if character is == or != or <= or >=
@@ -167,8 +185,7 @@ class Scanner:
                      or char == EToken.LESS.value)
                         and next_pos < len(self.file_contents)  # Index out of range handling
                         and self.file_contents[next_pos] == "="):  # check if next char is =
-                    key = ""
-                    value = ""
+
                     if char == EToken.EQUAL.value:  # char is ==
                         key = EToken.EQUAL_EQUAL.name
                         value = EToken.EQUAL_EQUAL.value
@@ -198,8 +215,8 @@ class Scanner:
             next_pos: next position in file contents
 
         :return:
-                True: if char is comment
-                None: if char is not comment
+                True (bool): if char is comment
+                None (bool): if char is not comment
         """
         if (char == EToken.SLASH.value
         and next_pos < len(self.file_contents)
@@ -217,6 +234,36 @@ class Scanner:
         """Move to next char by 1"""
         self.pos += 1
 
+    def increase_line_num(self):
+        """Increase line number"""
+        self.line_number += 1
+
+    def get_line_number(self):
+        """
+        Return current line number
+
+        :return:
+        line_number (int): current line number
+        """
+
+        # Slice file_contents until my pointer and count number of \n which represent end of line
+        return self.file_contents[:self.pos].count('\n') + 1
+
+    def get_total_lines(self):
+        """
+        Return total number of lines in file
+
+        :return:
+        result (int): total number of lines
+        """
+        result = self.file_contents.count('\n') + 1
+
+        # If text don't end with \n, I shouldn't count last one
+        if self.file_contents.endswith('\n'):
+            result -= 1
+
+        return result
+
     def skip_whitespace(self):
         """Skips whitespace characters"""
         # Checks if the position where self.pos is pointing is blank
@@ -228,7 +275,7 @@ class Scanner:
         Exit program
 
         exits:
-            code 65: If there is an unexpected character in the source code.
+            code 65: If there is an unexpected character in the file.
         """
         new_token = Token(EToken.EOF.name, "", "null")
         new_token.print_()
