@@ -1,7 +1,7 @@
 import sys
 
-from EToken import Token_type as EToken
-from Token import Token
+from .EToken import Token_type as EToken
+from .Token import Token
 
 
 class Scanner:

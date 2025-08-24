@@ -1,6 +1,6 @@
 import sys
 
-from Scanner import Scanner as scan
+from .Scanner import Scanner as scan
 
 
 def main():
