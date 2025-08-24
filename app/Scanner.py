@@ -1,7 +1,7 @@
 import sys
 
-from .EToken import Token_type as EToken
-from .Token import Token
+from EToken import Token_type as EToken
+from Token import Token
 
 
 class Scanner:
@@ -27,12 +27,13 @@ class Scanner:
         File always end with EOF  null
 
         """
-        self.skip_whitespace()
-
         while self.current_char():
             self.skip_whitespace()  # skip unnecessary spaces
+
             char = self.current_char()
 
+            if char is None:
+                break
             # Check end of line
             if self.line_number != self.get_line_number():
                 self.line_number = self.get_line_number()
