@@ -43,11 +43,11 @@ class Scanner:
                 new_token = Token("IDENTIFIER", identifier, "null")
                 this_unknown_char = False
             elif number := self.read_number(): # Check if token is number
-                new_token = Token("NUMBER", number, number)
+                new_token = Token("NUMBER", number[0], number[1])
                 this_unknown_char = False
 
             elif string := self.read_string(): # Check if token is string
-                new_token = Token("STRING", string, string)
+                new_token = Token("STRING", string[0], string[1]) # string is an array
                 this_unknown_char = False
 
             else: # Check other tokens
@@ -92,14 +92,18 @@ class Scanner:
 
     def read_number(self):
         """Reads a complete number from current position
-            :return number (Str): number, which is represented as a string
+
+            :return
+                :lexeme string (Str): word, which is represented as string and has \n on both side
+                :literal (Str): string, which is represented as string without \n
         """
         char = self.current_char()
 
         if not char or not char.isdigit():
             return None  # Not a valid number start
 
-        number = ""
+        lexeme = "\n"
+        literal = ""
         has_decimal = False
 
         # Cycle through number
@@ -107,7 +111,8 @@ class Scanner:
             char = self.current_char()
 
             if char.isdigit():
-                number += char
+                lexeme += char
+                literal += char
                 self.advance()
 
             # Check if there is only one dot
@@ -118,7 +123,8 @@ class Scanner:
                     # Check if after dot is another digit
                     if self.file_contents[next_pos].isdigit():
                         has_decimal = True
-                        number += char
+                        lexeme += char
+                        literal += char
                         self.advance()
                     else:
                         break
@@ -127,27 +133,44 @@ class Scanner:
             else:
                 break
 
-        return number # Return number in String
+        lexeme += "\n"
+        return lexeme, literal # Return number in String
 
     def read_string(self):
         """Reads a complete string from current position
 
-            :return string (Str): word, which is represented as string
+            :lexeme string (Str): word, which is represented as string and has \n on both side
+            :literal (Str): string, which is represented as string without \n
         """
         char = self.current_char()
 
         if not char or not char == '"':
             return None  # Not a valid string start
 
-        string = ""
+        lexeme = "\""
+        literal = ""
+        valid_string = False
         self.advance()
         # Check for ending "
-        while self.current_char() != '"':
+        while self.current_char():
+            if self.current_char() == '"':
+                lexeme += "\""
+                valid_string = True
+                break
             char = self.current_char()
-            string += char
+            lexeme += char
+            literal += char
             self.advance()
 
-        return string # Return string message in type String
+        if valid_string:
+            self.advance()
+            return lexeme, literal # Return lexeme and literal
+        else:
+
+            print(f"[line {self.line_number}] Error: Unterminated string.", file=sys.stderr)
+            self.unknown_char = True
+            self.exit_program()
+            return None
 
     def check_other_tokens(self, char: str):
         """Check if other tokens exist in current position
@@ -281,6 +304,6 @@ class Scanner:
         new_token = Token(EToken.EOF.name, "", "null")
         new_token.print_()
         if self.unknown_char:
-            exit(65)
+            sys.exit(65)
         else:
-            exit(0)
+            sys.exit(0)
