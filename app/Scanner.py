@@ -39,9 +39,14 @@ class Scanner:
                 self.line_number = self.get_line_number()
 
             # Walrus operator since Py 3.8, set variable right in condition
-            if identifier := self.read_identifier(): # Check if token is identifier
-                new_token = Token("IDENTIFIER", identifier, "null")
+            if identifier := self.read_identifier(): # Check if token is identifier or reserved word
                 this_unknown_char = False
+                if identifier[1]: # reserved word
+                    new_token = Token(EToken(identifier[0]).name, identifier[0], "null")
+                else: # identifier
+                    new_token = Token("IDENTIFIER", identifier[0], "null")
+
+
             elif number := self.read_number(): # Check if token is number
                 new_token = Token("NUMBER", number[0], number[1])
                 this_unknown_char = False
@@ -65,9 +70,11 @@ class Scanner:
 
     def read_identifier(self):
         """Reads a complete identifier from current position
+            Also checks if word is reserved
 
             return:
                 identifier (Str): identifier for token_type and lexeme
+                reserved_word (Bool): If is true thant the identifier is reserved word
         """
         char = self.current_char()
 
@@ -75,6 +82,7 @@ class Scanner:
         if not char or not (char.isalpha() or char == '_'):
             return None  # Not a valid identifier start
 
+        reserved_word = False
         identifier = ""
 
         # Read the complete identifier
@@ -86,9 +94,9 @@ class Scanner:
         # Check reserved Keyword
         for token in EToken:
             if token.value == identifier:
-                return None
+                reserved_word = True
 
-        return identifier
+        return identifier, reserved_word
 
     def read_number(self):
         """Reads a complete number from current position
