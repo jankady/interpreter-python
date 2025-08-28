@@ -102,7 +102,7 @@ class Scanner:
         if not char or not char.isdigit():
             return None  # Not a valid number start
 
-        lexeme = "\n"
+        lexeme = ""
         literal = ""
         has_decimal = False
 
@@ -133,7 +133,7 @@ class Scanner:
             else:
                 break
 
-        lexeme += "\n"
+        literal = float(literal)
         return lexeme, literal # Return number in String
 
     def read_string(self):
